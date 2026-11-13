@@ -1,0 +1,64 @@
+<section class="view active" id="borrower">
+  <div class="page-head"><div><h1>Find something to borrow</h1><p class="muted">Items from neighbors within 2 km.</p></div></div>
+
+  <div class="filters">
+    <div class="field">
+      <label for="fcat">Category</label>
+      <select id="fcat" [value]="store.category()" (change)="store.category.set($any($event.target).value)">
+        <option value="">All</option>
+        @for (c of categories; track c) { <option [value]="c">{{ c }}</option> }
+      </select>
+    </div>
+    <div class="field">
+      <label for="ffree">Price</label>
+      <select id="ffree" [value]="store.freeOnly()" (change)="store.freeOnly.set($any($event.target).value)">
+        <option value="">Any</option>
+        <option value="free">Free to borrow</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid-items">
+    @for (r of store.filtered(); track r.index) {
+      <app-item-card [item]="r.item">
+        @if (store.requested().has(r.index)) {
+          <button type="button" class="btn btn-small block" disabled>Request sent</button>
+        } @else {
+          <button type="button" class="btn btn-small block" (click)="request(r.index)">View details &amp; request</button>
+        }
+      </app-item-card>
+    } @empty {
+      <p class="muted">No items match your search.</p>
+    }
+  </div>
+
+  <h2 class="section">My requests</h2>
+  <ul class="list">
+    @for (r of store.reqs(); track $index; let i = $index) {
+      <li>
+        <div>
+          <strong>{{ r.it }}</strong> from {{ r.o }}<br />
+          <span class="muted small">{{ r.info }}</span>
+          @if (r.st === 'Accepted' && owner(r.o); as p) {
+            <br /><span class="small">Pick-up address: <strong>{{ p.street }}, {{ p.area }}, {{ p.city }}</strong></span>
+          }
+        </div>
+        <div class="row">
+          <span [class]="'badge ' + badge[r.st]">{{ r.st }}</span>
+          @if (r.st === 'Accepted') {
+            <button type="button" class="btn btn-small" (click)="store.returnRequest(i)">Mark as returned</button>
+          } @else if (r.st === 'Returned') {
+            @if (r.rated) {
+              <span class="muted small">You rated {{ r.rated }}/10</span>
+            } @else {
+              <button type="button" class="btn btn-small" (click)="rate(i)">Rate lender</button>
+            }
+          }
+        </div>
+      </li>
+    }
+  </ul>
+</section>
+
+<app-request-dialog />
+<app-rate-dialog />
